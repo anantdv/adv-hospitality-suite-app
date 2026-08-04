@@ -1,0 +1,3 @@
+import {create} from 'zustand';
+type Store={role:string;property:string;dark:boolean;presentation:boolean;live:boolean;set:(p:Partial<Store>)=>void};
+export const useDemoStore=create<Store>((set)=>({role:localStorage.getItem('adv-role')||'General Manager',property:localStorage.getItem('adv-property')||'Harbour View Hotel',dark:localStorage.getItem('adv-dark')==='true',presentation:false,live:true,set:(p)=>set(s=>{const n={...s,...p};if(p.role)localStorage.setItem('adv-role',p.role);if(p.property)localStorage.setItem('adv-property',p.property);if(p.dark!==undefined)localStorage.setItem('adv-dark',String(p.dark));return n})}));
