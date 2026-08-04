@@ -307,12 +307,13 @@ function Reservations({ go }: { go: (p: Page) => void }) {
   const [q, setQ] = useState('');
   const [event, setEvent] = useState<CalEvent | null>(null);
   const [view, setView] = useState<'day' | 'week' | 'month'>('week');
+  const [newReservation, setNewReservation] = useState(false);
   const { data = [], isLoading, isError } = useQuery({ queryKey: ['res', q], queryFn: () => api.reservations(q) });
   return (
     <>
       <section className="page-head">
         <div><div className="eyebrow">HOTEL OPERATIONS</div><h1>Reservations</h1><p>Bookings, scheduled arrivals, event prep and channel imports in one view.</p></div>
-        <button className="primary"><Plus /> New reservation</button>
+        <button className="primary" onClick={() => setNewReservation(true)}><Plus /> New reservation</button>
       </section>
       <div className="filterbar">
         <label><Search size={16} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search reservation, guest or room" /></label>
@@ -366,7 +367,32 @@ function Reservations({ go }: { go: (p: Page) => void }) {
           <button className="primary">Open detailed reservation</button>
         </Drawer>
       )}
+      {newReservation && <ReservationForm close={() => setNewReservation(false)} />}
     </>
+  );
+}
+
+function ReservationForm({ close }: { close: () => void }) {
+  const [kind, setKind] = useState('Room booking');
+  return (
+    <Drawer title="New reservation" close={close}>
+      <div className="form-grid">
+        <label>Reservation type<select value={kind} onChange={(e) => setKind(e.target.value)}><option>Room booking</option><option>Group block</option><option>Event / space booking</option><option>Day-use booking</option></select></label>
+        <label>Guest / company<input placeholder="Guest name or company" /></label>
+        <label>Source<select><option>Direct Website</option><option>Walk-in</option><option>Booking.com</option><option>Expedia</option><option>Corporate</option></select></label>
+        <label>Arrival<input type="datetime-local" /></label>
+        <label>Departure<input type="datetime-local" /></label>
+        <label>Adults<input type="number" min="1" defaultValue="2" /></label>
+        <label>Children<input type="number" min="0" defaultValue="0" /></label>
+        <label>{kind === 'Event / space booking' ? 'Space' : 'Room type'}<select><option>Executive King</option><option>Deluxe Twin</option><option>Premier Suite</option><option>Ballroom</option><option>Meeting Room</option></select></label>
+        <label>Rate plan<select><option>Best Available Rate</option><option>Corporate Rate</option><option>Breakfast Included</option><option>Event Package</option></select></label>
+        <label>Payment guarantee<select><option>Card authorization</option><option>Deposit received</option><option>Company account</option><option>Pay at property</option></select></label>
+        {kind === 'Group block' && <label>Rooms in block<input type="number" min="2" defaultValue="12" /></label>}
+        {kind === 'Event / space booking' && <label>Setup style<select><option>Theatre</option><option>Classroom</option><option>Banquet</option><option>Boardroom</option></select></label>}
+        <label className="wide">Notes<textarea placeholder="Preferences, arrival details, airport transfer, dietary notes..." /></label>
+      </div>
+      <div className="drawer-actions"><button className="primary">Create reservation</button><button className="secondary" onClick={close}>Cancel</button></div>
+    </Drawer>
   );
 }
 
@@ -485,15 +511,26 @@ function CheckIn() {
 function Rooms() {
   const [selected, setSelected] = useState<Room | null>(null);
   const [messageRoom, setMessageRoom] = useState<Room | null>(null);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [roomFilter, setRoomFilter] = useState('All');
+  const roomFilters = ['All', 'Vacant clean', 'Vacant dirty', 'Occupied', 'Maintenance', 'Reserved / VIP'];
+  const visibleRooms = rooms.filter((room) => {
+    if (roomFilter === 'All') return true;
+    if (roomFilter === 'Reserved / VIP') return room.status === 'Reserved' || room.priority.toLowerCase().includes('vip');
+    if (roomFilter === 'Vacant dirty') return room.status === 'Vacant dirty' || room.status === 'Service due' || room.status === 'Inspection';
+    return room.status.toLowerCase() === roomFilter.toLowerCase();
+  });
   return (
     <>
       <section className="page-head">
         <div><div className="eyebrow">ROOMS & HOUSEKEEPING</div><h1>Room status board</h1><p>Detailed room cards for occupancy, cleaning, maintenance and guest context.</p></div>
-        <div className="head-actions"><button className="secondary"><SlidersHorizontal /> Filters</button><button className="primary"><Plus /> Assign tasks</button></div>
+        <div className="head-actions"><button className="secondary"><SlidersHorizontal /> Filters</button><button className="primary" onClick={() => setAssignOpen(true)}><Plus /> Assign tasks</button></div>
       </section>
-      <div className="room-legend"><Badge>Vacant clean</Badge><Badge tone="warning">Vacant dirty</Badge><Badge tone="blue">Occupied</Badge><Badge tone="critical">Maintenance</Badge><Badge tone="gold">Reserved / VIP</Badge></div>
+      <div className="room-legend">
+        {roomFilters.map((filter) => <button className={roomFilter === filter ? 'active' : ''} onClick={() => setRoomFilter(filter)} key={filter}><Badge tone={filter === 'All' ? 'blue' : filter === 'Vacant dirty' ? 'warning' : filter === 'Occupied' ? 'blue' : filter === 'Maintenance' ? 'critical' : filter === 'Reserved / VIP' ? 'gold' : 'healthy'}>{filter}</Badge></button>)}
+      </div>
       <section className="room-board">
-        {rooms.map((r) => (
+        {visibleRooms.map((r) => (
           <button key={r.room} className={`room ${r.status.toLowerCase().replace(/\s+/g, '-')}`} onClick={() => setSelected(r)}>
             {r.message && <span className="room-alert" onClick={(e) => { e.stopPropagation(); setMessageRoom(r); }}><MessageSquareWarning size={14} /></span>}
             <b>{r.room}</b><span>{r.status}</span><small>{r.type}</small><em>{r.guest || r.housekeeping}</em>
@@ -543,6 +580,7 @@ function Rooms() {
           </div>
         </Drawer>
       )}
+      {assignOpen && <AssignTaskForm close={() => setAssignOpen(false)} room={selected?.room} />}
     </>
   );
 }
@@ -553,6 +591,8 @@ function RoomCheck({ ok, label, icon }: { ok: boolean; label: string; icon: Reac
 
 function Tasks() {
   const [group, setGroup] = useState('All');
+  const [newTask, setNewTask] = useState(false);
+  const [assignTask, setAssignTask] = useState<(typeof hotelTasks)[number] | null>(null);
   const groups = ['All', 'Housekeeping', 'Maintenance', 'Regular Checks', 'Guest Services'];
   const filtered = group === 'All' ? hotelTasks : hotelTasks.filter((task) => task.group === group);
   const counts = {
@@ -565,7 +605,7 @@ function Tasks() {
     <>
       <section className="page-head">
         <div><div className="eyebrow">HOTEL OPERATIONS</div><h1>Tasks</h1><p>Manage grouped operational work across housekeeping, maintenance, guest services and regular checks.</p></div>
-        <div className="head-actions"><button className="secondary"><SlidersHorizontal /> Filters</button><button className="primary"><Plus /> New task</button></div>
+        <div className="head-actions"><button className="secondary"><SlidersHorizontal /> Filters</button><button className="primary" onClick={() => setNewTask(true)}><Plus /> New task</button></div>
       </section>
       <div className="stat-grid">
         <Stat label="Total tasks" value={counts.total} />
@@ -592,7 +632,7 @@ function Tasks() {
                   <td>{task.due}</td>
                   <td><Badge tone={task.status === 'Done' ? 'healthy' : task.status === 'In progress' ? 'blue' : task.status === 'Scheduled' ? 'gold' : 'warning'}>{task.status}</Badge></td>
                   <td><Badge tone={task.priority === 'Critical' ? 'critical' : task.priority === 'High' ? 'warning' : 'healthy'}>{task.priority}</Badge></td>
-                  <td><div className="table-actions"><button className="text-btn">Assign</button><button className="text-btn">Update</button><button className="text-btn">Close</button></div></td>
+                  <td><div className="table-actions"><button className="text-btn" onClick={() => setAssignTask(task)}>Assign</button><button className="text-btn">Update</button><button className="text-btn">Close</button></div></td>
                 </tr>
               ))}
             </tbody>
@@ -604,7 +644,49 @@ function Tasks() {
         <Activity title="Regular checks" rows={hotelTasks.filter((x) => x.group === 'Regular Checks').map((x) => [x.title, `${x.owner} - ${x.status}`, x.status === 'Done' ? 'healthy' : 'blue'])} />
         <Activity title="Task automations" rows={[['Guest message to task', 'Create task from room alert', 'healthy'], ['Room blocked by maintenance', 'Auto-hide from sellable inventory', 'critical'], ['Housekeeping SLA timer', 'Escalate when due time is missed', 'warning']]} />
       </section>
+      {newTask && <TaskForm close={() => setNewTask(false)} />}
+      {assignTask && <AssignTaskForm close={() => setAssignTask(null)} task={assignTask} room={assignTask.room} />}
     </>
+  );
+}
+
+function TaskForm({ close }: { close: () => void }) {
+  const [type, setType] = useState('Housekeeping');
+  return (
+    <Drawer title="Create task" close={close}>
+      <div className="form-grid">
+        <label>Task type<select value={type} onChange={(e) => setType(e.target.value)}><option>Housekeeping</option><option>Maintenance</option><option>Regular Checks</option><option>Guest Services</option><option>Security</option></select></label>
+        <label>Priority<select><option>Normal</option><option>High</option><option>Critical</option></select></label>
+        <label>Room / area<input placeholder="Room 508, Lobby, Tower A..." /></label>
+        <label>Due date<input type="date" /></label>
+        <label>Due time<input type="time" /></label>
+        <label>Assign to<select><option>Housekeeping team</option><option>Engineering</option><option>Front desk</option><option>Security</option><option>Guest relations</option></select></label>
+        {type === 'Housekeeping' && <label>Housekeeping checklist<select><option>Stayover service</option><option>Checkout clean</option><option>Final inspection</option><option>Turn-down service</option></select></label>}
+        {type === 'Maintenance' && <label>Asset / issue<select><option>AC / fan coil</option><option>Door lock</option><option>Safe battery</option><option>Plumbing</option><option>Lighting</option></select></label>}
+        {type === 'Regular Checks' && <label>Check frequency<select><option>Daily</option><option>Per shift</option><option>Weekly</option><option>Monthly</option></select></label>}
+        {type === 'Guest Services' && <label>Guest request category<select><option>Amenity</option><option>Transport</option><option>Laundry</option><option>Food & beverage</option><option>Special preference</option></select></label>}
+        <label className="wide">Task description<textarea placeholder="Describe the task, guest message, checklist details or escalation notes..." /></label>
+      </div>
+      <div className="drawer-actions"><button className="primary">Create task</button><button className="secondary" onClick={close}>Cancel</button></div>
+    </Drawer>
+  );
+}
+
+function AssignTaskForm({ close, task, room }: { close: () => void; task?: (typeof hotelTasks)[number]; room?: string }) {
+  return (
+    <Drawer title={task ? `Assign ${task.id}` : 'Assign task'} close={close}>
+      {task && <><Badge tone={task.priority === 'Critical' ? 'critical' : task.priority === 'High' ? 'warning' : 'healthy'}>{task.priority}</Badge><p>{task.title}</p></>}
+      <div className="form-grid">
+        <label>Task group<select defaultValue={task?.group || 'Housekeeping'}><option>Housekeeping</option><option>Maintenance</option><option>Regular Checks</option><option>Guest Services</option><option>Security</option></select></label>
+        <label>Room / area<input defaultValue={room || ''} placeholder="Room or operational area" /></label>
+        <label>Assign to<select defaultValue={task?.owner || 'Housekeeping team'}><option>Housekeeping team</option><option>Engineering</option><option>Front desk</option><option>Security</option><option>Guest relations</option><option>IT</option></select></label>
+        <label>Shift<select><option>Morning</option><option>Afternoon</option><option>Night</option><option>On-call</option></select></label>
+        <label>Due time<input type="time" defaultValue={task?.due && task.due.includes(':') ? task.due : ''} /></label>
+        <label>Status<select defaultValue={task?.status || 'Pending'}><option>Pending</option><option>Scheduled</option><option>In progress</option><option>Done</option></select></label>
+        <label className="wide">Assignment note<textarea placeholder="Add instructions, guest message context, parts needed, or escalation notes..." defaultValue={task ? `${task.title} - ${task.room}` : ''} /></label>
+      </div>
+      <div className="drawer-actions"><button className="primary">Assign task</button><button className="secondary" onClick={close}>Cancel</button></div>
+    </Drawer>
   );
 }
 
@@ -784,9 +866,12 @@ function Access() {
 function Lift() {
   const cols = ['B', 'L', '1', '2', '3', '4', '5', 'Exec', 'Gym', 'Pool', 'Park', 'Svc'];
   const rows = ['Guest', 'VIP guest', 'Reception', 'Housekeeping', 'Maintenance', 'Security'];
+  const [editing, setEditing] = useState(false);
+  const canAccess = (i: number, j: number) => (i === 0 && [1, 6, 8, 9].includes(j)) || (i === 1 && j !== 11) || i > 3;
   return (
     <>
-      <section className="page-head"><div><div className="eyebrow">LIFT ACCESS</div><h1>Floor access matrix</h1><p>Permission policy by identity, floor, facility and credential.</p></div><button className="primary">Edit permissions</button></section>
+      <section className="page-head"><div><div className="eyebrow">LIFT ACCESS</div><h1>Floor access matrix</h1><p>Permission policy by identity, floor, facility and credential.</p></div><div className="head-actions">{editing && <button className="secondary" onClick={() => setEditing(false)}>Cancel</button>}<button className="primary" onClick={() => setEditing(!editing)}>{editing ? 'Save permissions' : 'Edit permissions'}</button></div></section>
+      {editing && <div className="edit-banner"><b>Editing mode enabled</b><span>Click cells to preview permission changes. Saving will push the policy to lift controllers after ERPNext integration.</span></div>}
       <div className="stat-grid"><Stat label="Lift controllers" value="6 / 6" tone="teal" /><Stat label="Trips today" value="3,842" /><Stat label="Denied attempts" value="9" tone="gold" /><Stat label="VIP entitlements" value="18" tone="blue" /></div>
       <section className="lift-dashboard">
         <article className="panel lift-bank">
@@ -807,7 +892,7 @@ function Lift() {
           </ResponsiveContainer>
         </article>
       </section>
-      <article className="panel matrix"><table><thead><tr><th>Identity</th>{cols.map((c) => <th key={c}>{c}</th>)}</tr></thead><tbody>{rows.map((r, i) => <tr key={r}><td><b>{r}</b></td>{cols.map((c, j) => <td key={c}><button className={(i === 0 && [1, 6, 8, 9].includes(j)) || (i === 1 && j !== 11) || i > 3 ? 'allow' : 'deny'}>{(i === 0 && [1, 6, 8, 9].includes(j)) || (i === 1 && j !== 11) || i > 3 ? 'Y' : '-'}</button></td>)}</tr>)}</tbody></table></article>
+      <article className={`panel matrix ${editing ? 'editing' : ''}`}><table><thead><tr><th>Identity</th>{cols.map((c) => <th key={c}>{c}</th>)}</tr></thead><tbody>{rows.map((r, i) => <tr key={r}><td><b>{r}</b></td>{cols.map((c, j) => <td key={c}><button className={canAccess(i, j) ? 'allow' : 'deny'} disabled={!editing}>{canAccess(i, j) ? 'Y' : '-'}</button></td>)}</tr>)}</tbody></table></article>
       <section className="three-col">
         <Activity title="Lift policies" rows={[['Guest policy', 'Room floor + lobby + amenities', 'healthy'], ['VIP policy', 'Executive, gym, pool, parking', 'gold'], ['Service policy', 'Back-of-house and service lift', 'blue'], ['Emergency policy', 'Fire override ready', 'critical']]} />
         <Activity title="Recent lift events" rows={[['Sarah Williams', 'Lift A to Floor 5 granted', 'healthy'], ['Unknown card', 'Executive floor denied', 'warning'], ['Housekeeping team', 'Service lift to 5 approved', 'blue'], ['Controller sync', 'All policies posted 08:41', 'healthy']]} />

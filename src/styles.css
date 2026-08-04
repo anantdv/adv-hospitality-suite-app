@@ -198,6 +198,8 @@ td span { display: block; color: #8493a2; font-size: 10px; margin-top: 2px; }
 .success-grid span { font-size: 10px; color: #718398; margin-top: 3px; }
 
 .room-legend { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 15px; }
+.room-legend button { border: 0; background: transparent; padding: 0; border-radius: 99px; cursor: pointer; }
+.room-legend button.active { outline: 2px solid #16325222; outline-offset: 2px; }
 .room-board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .room { min-height: 206px; border: 1px solid #dfe8ee; border-radius: 10px; background: #fff; padding: 16px; text-align: left; display: grid; align-content: start; gap: 5px; position: relative; }
 .room:hover { transform: translateY(-2px); box-shadow: 0 9px 20px #16325212; }
@@ -297,12 +299,16 @@ td span { display: block; color: #8493a2; font-size: 10px; margin-top: 2px; }
 .dark-head h1 { color: #fff; }
 .dark-head p { color: #b6cddd; }
 .secondary.dark { background: #183e67; color: #fff; border-color: #315879; }
+.edit-banner { display: flex; align-items: center; gap: 10px; background: #fff7df; border: 1px solid #f3d389; color: #815b00; border-radius: 9px; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; }
+.edit-banner b { color: #5e4300; }
 .matrix { overflow: auto; }
 .matrix { margin-top: 18px; }
 .matrix table { min-width: 760px; }
 .matrix th, .matrix td { text-align: center; }
 .matrix td:first-child { text-align: left; }
 .matrix td button { border: 0; border-radius: 5px; width: 27px; height: 27px; font-weight: 800; }
+.matrix.editing td button { cursor: pointer; box-shadow: inset 0 0 0 1px #ffffff99, 0 0 0 2px #dce8f2; }
+.matrix td button:disabled { cursor: default; opacity: .9; }
 .matrix td .allow { background: #dff5eb; color: #138555; }
 .matrix td .deny { background: #f4f6f7; color: #9aabb9; }
 
@@ -328,6 +334,11 @@ td span { display: block; color: #8493a2; font-size: 10px; margin-top: 2px; }
 .drawer-list svg { width: 17px; color: #0f9d8a; }
 .drawer-list b { color: #1a8a60; font-size: 10px; text-align: right; }
 .drawer-actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 16px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.form-grid label { display: grid; gap: 6px; font-size: 10px; color: #61768a; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.form-grid input, .form-grid select, .form-grid textarea { width: 100%; border: 1px solid #dce5ec; border-radius: 8px; padding: 10px; color: #28435b; background: #fff; font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.form-grid textarea { min-height: 92px; resize: vertical; }
+.form-grid .wide { grid-column: 1 / -1; }
 
 .task-board { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 18px; margin-top: 18px; }
 .task-sidebar { display: grid; align-content: start; gap: 8px; }
