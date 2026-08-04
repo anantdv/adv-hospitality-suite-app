@@ -973,20 +973,32 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
             <span>Secure demo access for hotel operations teams</span>
           </div>
         </div>
-        <article className="landing-panel">
-          <div className="panel-head"><h3>Live property pulse</h3><Badge tone="healthy">Online</Badge></div>
-          <div className="landing-metrics">
-            <Stat label="Occupancy" value="78.6%" tone="teal" />
-            <Stat label="Arrivals" value="48" tone="gold" />
-            <Stat label="Open tasks" value="8" tone="red" />
-            <Stat label="WiFi sessions" value="1,246" tone="blue" />
+        <article className="landing-visual">
+          <img src="/images/landing-hero-operations.png" alt="Modern hotel operations command dashboard in a lobby" />
+          <div className="landing-panel">
+            <div className="panel-head"><h3>Live property pulse</h3><Badge tone="healthy">Online</Badge></div>
+            <div className="landing-metrics">
+              <Stat label="Occupancy" value="78.6%" tone="teal" />
+              <Stat label="Arrivals" value="48" tone="gold" />
+              <Stat label="Open tasks" value="8" tone="red" />
+              <Stat label="WiFi sessions" value="1,246" tone="blue" />
+            </div>
           </div>
         </article>
       </section>
       <section className="landing-slider">
-        <article><Badge tone="teal">01</Badge><h2>Operate every room from one calendar.</h2><p>Drag bookings, spot occupancy gaps, inspect room readiness, and convert guest messages into tasks.</p></article>
-        <article><Badge tone="gold">02</Badge><h2>Connect devices to daily work.</h2><p>Tacitine WiFi, door locks, lift permissions and biometric attendance become visible operational signals.</p></article>
-        <article><Badge tone="blue">03</Badge><h2>Grow revenue beyond rooms.</h2><p>Use POS, direct booking, spaces, groups, rate intelligence and OTA controls to increase total guest value.</p></article>
+        <article>
+          <img src="/images/landing-slide-calendar.png" alt="Reservation calendar shown on a hotel front desk tablet" />
+          <div><Badge tone="teal">01</Badge><h2>Operate every room from one calendar.</h2><p>Drag bookings, spot occupancy gaps, inspect room readiness, and convert guest messages into tasks.</p></div>
+        </article>
+        <article>
+          <img src="/images/landing-slide-connected.png" alt="Connected hotel WiFi, door lock, lift and credential devices" />
+          <div><Badge tone="gold">02</Badge><h2>Connect devices to daily work.</h2><p>Tacitine WiFi, door locks, lift permissions and biometric attendance become visible operational signals.</p></div>
+        </article>
+        <article>
+          <img src="/images/landing-slide-revenue.png" alt="Hotel restaurant POS and revenue intelligence touchscreen" />
+          <div><Badge tone="blue">03</Badge><h2>Grow revenue beyond rooms.</h2><p>Use POS, direct booking, spaces, groups, rate intelligence and OTA controls to increase total guest value.</p></div>
+        </article>
       </section>
       <section className="landing-features">
         {[
