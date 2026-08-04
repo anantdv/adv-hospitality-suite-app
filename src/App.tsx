@@ -956,20 +956,21 @@ function ToastMessage({ toast }: { toast: Toast }) {
 }
 
 function LandingPage({ onLogin }: { onLogin: () => void }) {
+  const [showLogin, setShowLogin] = useState(false);
   return (
     <main className="landing-page">
       <nav className="landing-nav">
         <div className="logo landing-logo"><b>ADV</b><span>HOSPITALITY<br />SUITE</span></div>
-        <button className="secondary" onClick={onLogin}><LogIn size={17} /> Login</button>
+        <button className="secondary" onClick={() => setShowLogin(true)}><LogIn size={17} /> Login</button>
       </nav>
       <section className="landing-hero">
         <div>
           <div className="eyebrow"><span className="live-dot" /> FUTURE READY HOTEL OPERATIONS</div>
           <h1>Run rooms, guests, access, POS and revenue from one intelligent hospitality suite.</h1>
-          <p>ADV Hospitality Suite brings PMS, reservations, check-in, housekeeping, tasks, Tacitine internet, access control, lift permissions, POS, HR and OTA operations into one operational command centre.</p>
+          <p>ADV Hospitality Suite brings PMS, reservations, check-in, housekeeping, tasks, Tacitine internet, access control, lift permissions, POS, HR and OTA operations into one connected hotel platform.</p>
           <div className="landing-actions">
-            <button className="primary" onClick={onLogin}><LogIn size={17} /> Enter demo</button>
-            <span>Test login: <b>admin</b> / <b>admin@123</b></span>
+            <button className="primary" onClick={() => setShowLogin(true)}><LogIn size={17} /> Enter demo</button>
+            <span>Secure demo access for hotel operations teams</span>
           </div>
         </div>
         <article className="landing-panel">
@@ -982,6 +983,11 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
           </div>
         </article>
       </section>
+      <section className="landing-slider">
+        <article><Badge tone="teal">01</Badge><h2>Operate every room from one calendar.</h2><p>Drag bookings, spot occupancy gaps, inspect room readiness, and convert guest messages into tasks.</p></article>
+        <article><Badge tone="gold">02</Badge><h2>Connect devices to daily work.</h2><p>Tacitine WiFi, door locks, lift permissions and biometric attendance become visible operational signals.</p></article>
+        <article><Badge tone="blue">03</Badge><h2>Grow revenue beyond rooms.</h2><p>Use POS, direct booking, spaces, groups, rate intelligence and OTA controls to increase total guest value.</p></article>
+      </section>
       <section className="landing-features">
         {[
           ['Unified PMS', 'Reservations, calendar, folios, room status and guest profiles.'],
@@ -990,6 +996,13 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
           ['Business control', 'POS, HR, OTA, revenue intelligence and ERPNext-ready workflows.'],
         ].map((x) => <article className="capability-card" key={x[0]}><h3>{x[0]}</h3><p>{x[1]}</p><small>Included in demo</small></article>)}
       </section>
+      <section className="landing-showcase">
+        <div><div className="eyebrow">BUILT FOR HOTEL TEAMS</div><h2>Front desk, housekeeping, security, F&B and management see the same truth.</h2><p>Every section in the prototype is designed to later connect to ERPNext records, device events, guest workflows and operational automations.</p></div>
+        <div className="showcase-grid">
+          {['Reservations', 'Guest check-in', 'Rooms', 'Tasks', 'Internet', 'Access', 'Lift', 'POS', 'HR', 'OTA'].map((x) => <span key={x}>{x}</span>)}
+        </div>
+      </section>
+      {showLogin && <div className="login-modal overlay"><LoginPage onLogin={onLogin} onBack={() => setShowLogin(false)} /></div>}
     </main>
   );
 }
@@ -1013,21 +1026,21 @@ function LoginPage({ onLogin, onBack }: { onLogin: () => void; onBack: () => voi
         <div className="logo login-logo"><b>ADV</b><span>HOSPITALITY<br />SUITE</span></div>
         <div>
           <div className="eyebrow">SECURE ACCESS</div>
-          <h1>Login to command centre</h1>
-          <p>Use the default testing credential to enter the prototype.</p>
+          <h1>Login</h1>
+          <p>Enter your demo access credential to continue.</p>
         </div>
         <label>Username<input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" /></label>
         <label>Password<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="current-password" /></label>
         {error && <div className="login-error">{error}</div>}
         <button className="primary" type="submit"><LogIn size={17} /> Login</button>
-        <button className="text-btn" type="button" onClick={onBack}>Back to landing page</button>
+        <button className="text-btn" type="button" onClick={onBack}>Cancel</button>
       </form>
     </main>
   );
 }
 
 export default function App() {
-  const [authView, setAuthView] = useState<'landing' | 'login' | 'app'>('landing');
+  const [authView, setAuthView] = useState<'landing' | 'app'>('landing');
   const [page, setPage] = useState<Page>('dashboard');
   const [search, setSearch] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
@@ -1070,8 +1083,7 @@ export default function App() {
     setToast({ title: `${text} requested`, body: 'Demo message queued. ERPNext/live device events will be connected in the next integration phase.' });
   };
 
-  if (authView === 'landing') return <LandingPage onLogin={() => setAuthView('login')} />;
-  if (authView === 'login') return <LoginPage onLogin={() => setAuthView('app')} onBack={() => setAuthView('landing')} />;
+  if (authView === 'landing') return <LandingPage onLogin={() => setAuthView('app')} />;
 
   let content: React.ReactNode;
   switch (page) {
