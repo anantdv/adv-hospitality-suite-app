@@ -28,6 +28,8 @@ import {
   Hotel,
   KeyRound,
   LayoutDashboard,
+  LogIn,
+  LogOut,
   Menu,
   MessageSquareWarning,
   MonitorPlay,
@@ -953,13 +955,88 @@ function ToastMessage({ toast }: { toast: Toast }) {
   return <div className="toast"><b>{toast.title}</b><span>{toast.body}</span></div>;
 }
 
+function LandingPage({ onLogin }: { onLogin: () => void }) {
+  return (
+    <main className="landing-page">
+      <nav className="landing-nav">
+        <div className="logo landing-logo"><b>ADV</b><span>HOSPITALITY<br />SUITE</span></div>
+        <button className="secondary" onClick={onLogin}><LogIn size={17} /> Login</button>
+      </nav>
+      <section className="landing-hero">
+        <div>
+          <div className="eyebrow"><span className="live-dot" /> FUTURE READY HOTEL OPERATIONS</div>
+          <h1>Run rooms, guests, access, POS and revenue from one intelligent hospitality suite.</h1>
+          <p>ADV Hospitality Suite brings PMS, reservations, check-in, housekeeping, tasks, Tacitine internet, access control, lift permissions, POS, HR and OTA operations into one operational command centre.</p>
+          <div className="landing-actions">
+            <button className="primary" onClick={onLogin}><LogIn size={17} /> Enter demo</button>
+            <span>Test login: <b>admin</b> / <b>admin@123</b></span>
+          </div>
+        </div>
+        <article className="landing-panel">
+          <div className="panel-head"><h3>Live property pulse</h3><Badge tone="healthy">Online</Badge></div>
+          <div className="landing-metrics">
+            <Stat label="Occupancy" value="78.6%" tone="teal" />
+            <Stat label="Arrivals" value="48" tone="gold" />
+            <Stat label="Open tasks" value="8" tone="red" />
+            <Stat label="WiFi sessions" value="1,246" tone="blue" />
+          </div>
+        </article>
+      </section>
+      <section className="landing-features">
+        {[
+          ['Unified PMS', 'Reservations, calendar, folios, room status and guest profiles.'],
+          ['Operations tasks', 'Housekeeping, maintenance, regular checks and guest requests.'],
+          ['Connected property', 'Tacitine internet, door locks, lift access and device health.'],
+          ['Business control', 'POS, HR, OTA, revenue intelligence and ERPNext-ready workflows.'],
+        ].map((x) => <article className="capability-card" key={x[0]}><h3>{x[0]}</h3><p>{x[1]}</p><small>Included in demo</small></article>)}
+      </section>
+    </main>
+  );
+}
+
+function LoginPage({ onLogin, onBack }: { onLogin: () => void; onBack: () => void }) {
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('admin@123');
+  const [error, setError] = useState('');
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (username === 'admin' && password === 'admin@123') {
+      setError('');
+      onLogin();
+    } else {
+      setError('Invalid demo credential. Use admin / admin@123.');
+    }
+  };
+  return (
+    <main className="login-page">
+      <form className="login-card" onSubmit={submit}>
+        <div className="logo login-logo"><b>ADV</b><span>HOSPITALITY<br />SUITE</span></div>
+        <div>
+          <div className="eyebrow">SECURE ACCESS</div>
+          <h1>Login to command centre</h1>
+          <p>Use the default testing credential to enter the prototype.</p>
+        </div>
+        <label>Username<input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" /></label>
+        <label>Password<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="current-password" /></label>
+        {error && <div className="login-error">{error}</div>}
+        <button className="primary" type="submit"><LogIn size={17} /> Login</button>
+        <button className="text-btn" type="button" onClick={onBack}>Back to landing page</button>
+      </form>
+    </main>
+  );
+}
+
 export default function App() {
+  const [authView, setAuthView] = useState<'landing' | 'login' | 'app'>('landing');
   const [page, setPage] = useState<Page>('dashboard');
   const [search, setSearch] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const [navCollapsed, setNavCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const store = useDemoStore();
+
+  if (authView === 'landing') return <LandingPage onLogin={() => setAuthView('login')} />;
+  if (authView === 'login') return <LoginPage onLogin={() => setAuthView('app')} onBack={() => setAuthView('landing')} />;
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', store.dark);
@@ -1025,7 +1102,16 @@ export default function App() {
         </div>
         <p className="tagline">Unified Hotel Operations, Guest Experience, Security and Business Management Platform</p>
         <nav>{nav.map((g) => <div className="nav-group" key={g.group}><label>{g.group}</label>{g.items.map(([id, name, Icon]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => go(id)} title={name}><span className="nav-icon" style={{ '--nav-color': navTone[id] } as React.CSSProperties}><Icon size={18} /></span><span>{name}</span></button>)}</div>)}</nav>
-        <div className="sidebar-foot"><select value={store.role} onChange={(e) => store.set({ role: e.target.value })}>{roles.map((x) => <option key={x}>{x}</option>)}</select><div><div className="avatar">GM</div><span><b>Gabriel Muri</b><small>{store.role}</small></span></div></div>
+        <div className="sidebar-foot">
+          <select value={store.role} onChange={(e) => store.set({ role: e.target.value })}>
+            {roles.map((x) => <option key={x}>{x}</option>)}
+          </select>
+          <div>
+            <div className="avatar">GM</div>
+            <span><b>Gabriel Muri</b><small>{store.role}</small></span>
+            <button className="logout-btn" onClick={() => setAuthView('landing')} title="Logout"><LogOut size={15} /></button>
+          </div>
+        </div>
       </aside>
       <main className="main"><Header page={label} setSearch={setSearch} toggleMobileNav={() => setMobileNavOpen(true)} /><div className="content">{content}</div></main>
       {search && <SearchModal close={() => setSearch(false)} go={go} />}
