@@ -1035,9 +1035,6 @@ export default function App() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const store = useDemoStore();
 
-  if (authView === 'landing') return <LandingPage onLogin={() => setAuthView('login')} />;
-  if (authView === 'login') return <LoginPage onLogin={() => setAuthView('app')} onBack={() => setAuthView('landing')} />;
-
   useEffect(() => {
     document.documentElement.classList.toggle('dark', store.dark);
     document.body.classList.toggle('presentation', store.presentation);
@@ -1072,6 +1069,9 @@ export default function App() {
     const text = button.textContent?.trim().replace(/\s+/g, ' ') || 'Action';
     setToast({ title: `${text} requested`, body: 'Demo message queued. ERPNext/live device events will be connected in the next integration phase.' });
   };
+
+  if (authView === 'landing') return <LandingPage onLogin={() => setAuthView('login')} />;
+  if (authView === 'login') return <LoginPage onLogin={() => setAuthView('app')} onBack={() => setAuthView('landing')} />;
 
   let content: React.ReactNode;
   switch (page) {
