@@ -38,7 +38,25 @@ Use **Enter presentation mode** from the floating presenter control to remove th
 
 ## ERPNext readiness
 
-`src/config/integration.ts` contains non-secret placeholders for ERPNext/Frappe base URL, WebSocket URL and representative endpoints. Replace the mock API layer with authenticated Frappe REST/custom whitelisted calls, CSRF/session handling and secure token storage. No real credentials are included.
+`src/config/server.ts` and `src/config/integration.ts` contain non-secret placeholders for ERPNext/Frappe base URL, WebSocket URL and representative endpoints. Configure deployments with:
+
+```bash
+VITE_ERPNEXT_URL=https://your-erpnext-site.example.com
+VITE_FRAPPE_SOCKET_URL=wss://your-erpnext-site.example.com/socket.io
+VITE_FRAPPE_API_TOKEN=
+```
+
+The companion Frappe app is included at `frappe/adv_hospitality_backend`. Install it in an ERPNext bench with:
+
+```bash
+bench get-app ./frappe/adv_hospitality_backend
+bench --site your-site.local install-app adv_hospitality_backend
+bench --site your-site.local migrate
+```
+
+It creates DocTypes for property, rooms, room types, guests, reservations, stays, guest messages, operations tasks, housekeeping, maintenance, Tacitine-style hotspot/network records, access events, guest credentials, lift permissions, POS outlets/orders, staff rosters, OTA channels and integration events. Whitelisted methods are exposed under `adv_hospitality_backend.api`.
+
+Replace the mock API layer with authenticated Frappe REST/custom whitelisted calls, CSRF/session handling and secure token storage. No real credentials are included.
 
 ## Prototype limitations
 
