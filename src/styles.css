@@ -199,13 +199,21 @@ td span { display: block; color: #8493a2; font-size: 10px; margin-top: 2px; }
 
 .room-legend { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 15px; }
 .room-board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
-.room { min-height: 156px; border: 1px solid #dfe8ee; border-radius: 10px; background: #fff; padding: 16px; text-align: left; display: grid; align-content: start; gap: 5px; }
+.room { min-height: 206px; border: 1px solid #dfe8ee; border-radius: 10px; background: #fff; padding: 16px; text-align: left; display: grid; align-content: start; gap: 5px; position: relative; }
 .room:hover { transform: translateY(-2px); box-shadow: 0 9px 20px #16325212; }
 .room b { font-size: 22px; color: #163252; }
 .room span { font-size: 11px; font-weight: 800; }
 .room small { font-size: 10px; color: #6f8194; }
 .room em { min-height: 26px; font-size: 10px; color: #536a81; font-style: normal; line-height: 1.35; }
 .room i { margin-top: 5px; font-size: 9px; color: #986a00; font-style: normal; font-weight: 800; }
+.room-alert { position: absolute; right: 10px; top: 10px; width: 27px; height: 27px; border-radius: 50%; background: #fff2dd; color: #d07800; display: grid; place-items: center; box-shadow: 0 2px 8px #7a4b0018; }
+.room-alert svg { width: 15px; }
+.room-checks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 7px; }
+.room-checks span { height: 30px; border-radius: 7px; display: grid; place-items: center; }
+.room-checks svg { width: 16px; height: 16px; }
+.room-checks .passed { background: #e4f7ed; color: #14824f; }
+.room-checks .pending { background: #ffe9e8; color: #c43c3c; }
+.folio-line { font-size: 10px; color: #183956; background: #f4f8fa; border: 1px solid #e5edf2; border-radius: 7px; padding: 6px 7px; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .room.vacant-clean { border-top: 4px solid #20a96e; }
 .room.vacant-dirty, .room.service-due, .room.inspection { border-top: 4px solid #e0a329; }
 .room.occupied { border-top: 4px solid #1d4ed8; }
@@ -319,6 +327,17 @@ td span { display: block; color: #8493a2; font-size: 10px; margin-top: 2px; }
 .drawer-list div { display: grid; grid-template-columns: 28px minmax(90px, 1fr) minmax(120px, auto); align-items: center; border-bottom: 1px solid #eef2f4; padding-bottom: 12px; font-size: 11px; }
 .drawer-list svg { width: 17px; color: #0f9d8a; }
 .drawer-list b { color: #1a8a60; font-size: 10px; text-align: right; }
+.drawer-actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 16px; }
+
+.task-board { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 18px; margin-top: 18px; }
+.task-sidebar { display: grid; align-content: start; gap: 8px; }
+.task-sidebar .panel-head { margin-bottom: 4px; }
+.task-sidebar button { border: 1px solid #e1e9ef; background: #fff; border-radius: 8px; color: #29435d; display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; text-align: left; padding: 10px; font-size: 12px; font-weight: 800; }
+.task-sidebar button.active { border-color: #1d4ed8; background: #edf4ff; color: #1d4ed8; }
+.task-sidebar button svg { width: 16px; color: #d9a441; }
+.task-sidebar button b { font-size: 10px; color: inherit; background: #eef3f7; border-radius: 99px; padding: 2px 7px; }
+.task-table .table-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+.task-table .text-btn { color: #1d4ed8; }
 .command { justify-content: center; align-items: flex-start; padding-top: 13vh; }
 .command-box { width: min(620px, 94vw); background: #fff; border-radius: 12px; box-shadow: 0 20px 70px #08264255; overflow: hidden; }
 .command-box header { display: flex; align-items: center; gap: 9px; padding: 14px; border-bottom: 1px solid #e5ebef; color: #60748a; }
@@ -421,7 +440,7 @@ td span { display: block; color: #8493a2; font-size: 10px; margin-top: 2px; }
   .page-head { align-items: start; flex-direction: column; }
   .hero-card { padding: 22px; align-items: flex-start; }
   .hero-arc { display: none; }
-  .stat-grid, .live-grid, .two-col, .ops-command, .access-grid, .lift-dashboard, .pos-layout, .success-grid, .integration-grid, .capability-grid, .ops-map, .controller-grid, .lift-bank, .revenue-intel { grid-template-columns: 1fr; }
+  .stat-grid, .live-grid, .two-col, .ops-command, .access-grid, .lift-dashboard, .pos-layout, .success-grid, .integration-grid, .capability-grid, .ops-map, .controller-grid, .lift-bank, .revenue-intel, .task-board { grid-template-columns: 1fr; }
   .segmented { margin-left: 0; }
   .room-board, .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .filterbar, .pos-filters, .pos-top, .order-selects { flex-wrap: wrap; }

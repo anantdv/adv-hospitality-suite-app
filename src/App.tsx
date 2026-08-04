@@ -21,6 +21,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronRight,
+  ClipboardList,
   Clock3,
   Command,
   DoorOpen,
@@ -28,6 +29,7 @@ import {
   KeyRound,
   LayoutDashboard,
   Menu,
+  MessageSquareWarning,
   MonitorPlay,
   Moon,
   Plus,
@@ -46,6 +48,7 @@ import {
 import { api } from './api/mockApi';
 import {
   integrations,
+  hotelTasks,
   netFlows,
   properties,
   reservationCalendar,
@@ -64,6 +67,7 @@ type Page =
   | 'reservations'
   | 'checkin'
   | 'rooms'
+  | 'tasks'
   | 'hotspot'
   | 'access'
   | 'lift'
@@ -78,7 +82,7 @@ type Room = (typeof rooms)[number];
 
 const nav: { group: string; items: [Page, string, typeof LayoutDashboard][] }[] = [
   { group: 'Overview', items: [['dashboard', 'Executive Dashboard', LayoutDashboard], ['operations', 'Live Operations Centre', MonitorPlay]] },
-  { group: 'Hotel Operations', items: [['reservations', 'Reservations', CalendarDays], ['checkin', 'Guest Check-In', KeyRound], ['rooms', 'Rooms & Housekeeping', Hotel]] },
+  { group: 'Hotel Operations', items: [['reservations', 'Reservations', CalendarDays], ['checkin', 'Guest Check-In', KeyRound], ['rooms', 'Rooms & Housekeeping', Hotel], ['tasks', 'Tasks', ClipboardList]] },
   { group: 'Guest & Security', items: [['hotspot', 'Internet Management', Wifi], ['access', 'Access Control', ShieldCheck], ['lift', 'Lift Access', DoorOpen]] },
   { group: 'Business Management', items: [['pos', 'POS & Outlets', UtensilsCrossed], ['hr', 'HR & Attendance', Users], ['ota', 'OTA & Channels', RefreshCw], ['integrations', 'Integration Health', SlidersHorizontal]] },
 ];
@@ -89,6 +93,7 @@ const navTone: Record<Page, string> = {
   reservations: '#f59e0b',
   checkin: '#14b8a6',
   rooms: '#6366f1',
+  tasks: '#eab308',
   hotspot: '#06b6d4',
   access: '#ef4444',
   lift: '#8b5cf6',
@@ -479,6 +484,7 @@ function CheckIn() {
 
 function Rooms() {
   const [selected, setSelected] = useState<Room | null>(null);
+  const [messageRoom, setMessageRoom] = useState<Room | null>(null);
   return (
     <>
       <section className="page-head">
@@ -489,7 +495,16 @@ function Rooms() {
       <section className="room-board">
         {rooms.map((r) => (
           <button key={r.room} className={`room ${r.status.toLowerCase().replace(/\s+/g, '-')}`} onClick={() => setSelected(r)}>
-            <b>{r.room}</b><span>{r.status}</span><small>{r.type}</small><em>{r.guest || r.housekeeping}</em><i>{r.priority}</i>
+            {r.message && <span className="room-alert" onClick={(e) => { e.stopPropagation(); setMessageRoom(r); }}><MessageSquareWarning size={14} /></span>}
+            <b>{r.room}</b><span>{r.status}</span><small>{r.type}</small><em>{r.guest || r.housekeeping}</em>
+            <div className="room-checks">
+              <RoomCheck ok={r.checks.housekeeping} label="Housekeeping" icon={<CheckCircle2 />} />
+              <RoomCheck ok={r.checks.internet} label="Internet" icon={<Wifi />} />
+              <RoomCheck ok={r.checks.door} label="Door lock" icon={<DoorOpen />} />
+              <RoomCheck ok={r.checks.maintenance} label="Maintenance" icon={<Wrench />} />
+            </div>
+            <strong className="folio-line">Folio: {r.balance}</strong>
+            <i>{r.priority}</i>
           </button>
         ))}
       </section>
@@ -504,11 +519,91 @@ function Rooms() {
             <div><Wrench /> Housekeeping <b>{selected.housekeeping}</b></div>
             <div><ShieldCheck /> Maintenance <b>{selected.maintenance}</b></div>
             <div><Wifi /> Internet <b>{selected.internet}</b></div>
+            <div><DoorOpen /> Door lock <b>{selected.doorLock}</b></div>
             <div><Clock3 /> Folio / balance <b>{selected.balance}</b></div>
+            <div><MessageSquareWarning /> Guest message <b>{selected.message || 'No pending message'}</b></div>
           </div>
           <button className="primary">Create room task</button>
         </Drawer>
       )}
+      {messageRoom && (
+        <Drawer title={`Guest message - Room ${messageRoom.room}`} close={() => setMessageRoom(null)}>
+          <Badge tone="warning">Pending guest message</Badge>
+          <h2>{messageRoom.guest || messageRoom.type}</h2>
+          <p>{messageRoom.message}</p>
+          <div className="drawer-list">
+            <div><Hotel /> Room <b>{messageRoom.room}</b></div>
+            <div><Users /> Guest <b>{messageRoom.guest || 'No active guest'}</b></div>
+            <div><Clock3 /> Suggested SLA <b>30 minutes</b></div>
+            <div><ClipboardList /> Suggested task group <b>{messageRoom.status === 'Maintenance' ? 'Maintenance' : messageRoom.guest ? 'Guest Services' : 'Housekeeping'}</b></div>
+          </div>
+          <div className="drawer-actions">
+            <button className="primary">Assign task</button>
+            <button className="secondary">Mark message reviewed</button>
+          </div>
+        </Drawer>
+      )}
+    </>
+  );
+}
+
+function RoomCheck({ ok, label, icon }: { ok: boolean; label: string; icon: React.ReactNode }) {
+  return <span className={ok ? 'passed' : 'pending'} title={`${label}: ${ok ? 'passed' : 'pending'}`}>{icon}</span>;
+}
+
+function Tasks() {
+  const [group, setGroup] = useState('All');
+  const groups = ['All', 'Housekeeping', 'Maintenance', 'Regular Checks', 'Guest Services'];
+  const filtered = group === 'All' ? hotelTasks : hotelTasks.filter((task) => task.group === group);
+  const counts = {
+    total: hotelTasks.length,
+    pending: hotelTasks.filter((x) => x.status === 'Pending').length,
+    progress: hotelTasks.filter((x) => x.status === 'In progress').length,
+    critical: hotelTasks.filter((x) => x.priority === 'Critical').length,
+  };
+  return (
+    <>
+      <section className="page-head">
+        <div><div className="eyebrow">HOTEL OPERATIONS</div><h1>Tasks</h1><p>Manage grouped operational work across housekeeping, maintenance, guest services and regular checks.</p></div>
+        <div className="head-actions"><button className="secondary"><SlidersHorizontal /> Filters</button><button className="primary"><Plus /> New task</button></div>
+      </section>
+      <div className="stat-grid">
+        <Stat label="Total tasks" value={counts.total} />
+        <Stat label="Pending" value={counts.pending} tone="gold" />
+        <Stat label="In progress" value={counts.progress} tone="blue" />
+        <Stat label="Critical priority" value={counts.critical} tone="red" />
+      </div>
+      <section className="task-board">
+        <article className="panel task-sidebar">
+          <div className="panel-head"><h3>Task groups</h3><Badge tone="blue">Live</Badge></div>
+          {groups.map((x) => <button className={group === x ? 'active' : ''} onClick={() => setGroup(x)} key={x}><ClipboardList size={16} />{x}<b>{x === 'All' ? hotelTasks.length : hotelTasks.filter((task) => task.group === x).length}</b></button>)}
+        </article>
+        <article className="panel table-panel task-table">
+          <div className="panel-head"><div><h3>{group} tasks</h3><p>Assign, update and track operational work</p></div><button className="text-btn">Export</button></div>
+          <table>
+            <thead><tr><th>Task</th><th>Group</th><th>Room / Area</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Manage</th></tr></thead>
+            <tbody>
+              {filtered.map((task) => (
+                <tr key={task.id}>
+                  <td><b>{task.title}</b><span>{task.id}</span></td>
+                  <td>{task.group}</td>
+                  <td>{task.room}</td>
+                  <td>{task.owner}</td>
+                  <td>{task.due}</td>
+                  <td><Badge tone={task.status === 'Done' ? 'healthy' : task.status === 'In progress' ? 'blue' : task.status === 'Scheduled' ? 'gold' : 'warning'}>{task.status}</Badge></td>
+                  <td><Badge tone={task.priority === 'Critical' ? 'critical' : task.priority === 'High' ? 'warning' : 'healthy'}>{task.priority}</Badge></td>
+                  <td><div className="table-actions"><button className="text-btn">Assign</button><button className="text-btn">Update</button><button className="text-btn">Close</button></div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </article>
+      </section>
+      <section className="three-col">
+        <Activity title="Due next" rows={hotelTasks.slice(0, 4).map((x) => [x.title, `${x.room} - due ${x.due}`, x.priority === 'Critical' ? 'critical' : 'warning'])} />
+        <Activity title="Regular checks" rows={hotelTasks.filter((x) => x.group === 'Regular Checks').map((x) => [x.title, `${x.owner} - ${x.status}`, x.status === 'Done' ? 'healthy' : 'blue'])} />
+        <Activity title="Task automations" rows={[['Guest message to task', 'Create task from room alert', 'healthy'], ['Room blocked by maintenance', 'Auto-hide from sellable inventory', 'critical'], ['Housekeeping SLA timer', 'Escalate when due time is missed', 'warning']]} />
+      </section>
     </>
   );
 }
@@ -823,6 +918,7 @@ export default function App() {
     case 'reservations': content = <Reservations go={go} />; break;
     case 'checkin': content = <CheckIn />; break;
     case 'rooms': content = <Rooms />; break;
+    case 'tasks': content = <Tasks />; break;
     case 'hotspot': content = <Hotspot />; break;
     case 'access': content = <Access />; break;
     case 'lift': content = <Lift />; break;
